@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-
-
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
 
 <style>
@@ -11,10 +8,11 @@ body { font-family: Arial; margin: 20px; }
 
 textarea {
   width: 100%;
-  min-height: 150px;
+  min-height: 50px;
   font-family: monospace;
-  overflow: hidden;   /* ✅ remove scrollbar */
-  resize: none;       /* ✅ disable manual resize */
+  overflow: hidden;
+  resize: none;
+  box-sizing: border-box;
 }
 
 button {
@@ -33,9 +31,7 @@ button {
 </head>
 
 <body>
-
-
-<textarea id="code" oninput="autoResize(this)">
+<textarea id="code">
 import pandas as pd
 shopping_list = pd.Series(['Apples', 'Bananas', 'Milk', 'Bread'])
 print(shopping_list)
@@ -50,25 +46,33 @@ print(shopping_list)
 <script>
 let pyodide;
 
-// ✅ Auto-resize function
+// ✅ AUTO RESIZE FUNCTION
 function autoResize(textarea) {
   textarea.style.height = "auto";
   textarea.style.height = textarea.scrollHeight + "px";
 }
 
-// ✅ Initialize Python (FAST)
+// ✅ INIT (FAST LOAD)
 async function init() {
   pyodide = await loadPyodide();
 
   document.getElementById("output").textContent = "✅ Python Ready!";
-  
-  // resize textbox on load
-  autoResize(document.getElementById("code"));
+
+  const textarea = document.getElementById("code");
+
+  // ✅ Resize on load
+  autoResize(textarea);
+
+  // ✅ Resize when typing
+  textarea.addEventListener("input", function() {
+    autoResize(this);
+  });
 }
+
 init();
 
 
-// ✅ Load packages only when needed
+// ✅ LOAD PACKAGES ONLY WHEN NEEDED
 async function loadPackages(code) {
   let output = document.getElementById("output");
 
@@ -97,7 +101,7 @@ await micropip.install("seaborn")
 }
 
 
-// ✅ Run button
+// ✅ RUN CODE
 async function runCode() {
   let output = document.getElementById("output");
 
@@ -106,7 +110,6 @@ async function runCode() {
   output.textContent = "Preparing environment...";
 
   try {
-    // ✅ Load required libraries dynamically
     await loadPackages(code);
 
     // ✅ Capture output
@@ -122,7 +125,7 @@ sys.stdout = StringIO()
     output.textContent = result;
 
   } catch (err) {
-    output.textContent = "❌ Error:\n" + err;
+    output.textContent = "❌ Error:\\n" + err;
   }
 }
 </script>
