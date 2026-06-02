@@ -8,8 +8,21 @@
 
 <style>
 body { font-family: Arial; margin: 20px; }
-textarea { width: 100%; height: 200px; }
-#output { background: black; color: lime; padding: 10px; }
+textarea { width: 100%; height: 220px; font-family: monospace; }
+button { padding: 10px; margin-top: 10px; }
+
+#output {
+  background: black;
+  color: lime;
+  padding: 10px;
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+
+#plot img {
+  max-width: 100%;
+  margin-top: 10px;
+}
 </style>
 </head>
 
@@ -18,55 +31,102 @@ textarea { width: 100%; height: 200px; }
 
 
 <textarea id="code">
-
 import pandas as pd
-shopping_list = pd.Series(['Apples', 'Bananas', 'Milk', 'Bread'])
-print(shopping_list)
-
-
+print(pd.Series([1,2,3]))
 </textarea>
 
 <br>
-<button onclick="runCode()">▶ Run Code</button>
+<button id="runBtn" onclick="runCode()" disabled>▶ Run Code</button>
 
 <h3>Output</h3>
-<div id="output">Loading Python...</div>
+<div id="output">Initializing Python...</div>
+<div id="plot"></div>
 
 <script>
 let pyodide;
 
-// ✅ SIMPLE INIT (NO heavy packages)
+// ✅ INIT: LOAD EVERYTHING SAFELY
 async function init() {
   pyodide = await loadPyodide();
-  document.getElementById("output").textContent = "✅ Ready!";
-}
-init();
 
-// ✅ RUN CODE
-async function runCode() {
-  let output = document.getElementById("output");
-
-  output.textContent = "Running...";
+  let out = document.getElementById("output");
 
   try {
+    out.textContent = "Loading pandas & matplotlib...";
+    await pyodide.loadPackage(["pandas", "matplotlib"]);
+
+    out.textContent = "Installing seaborn...";
+    await pyodide.loadPackage("micropip");
+
+    await pyodide.runPythonAsync(`
+import micropip
+await micropip.install("seaborn")
+`);
+
+    out.textContent = "✅ Ready!";
+
+    // ✅ Enable button only after ALL done
+    document.getElementById("runBtn").disabled = false;
+
+  } catch (err) {
+    out.textContent = "❌ Failed to load environment:\\n" + err;
+  }
+}
+
+init();
+
+
+// ✅ RUN CODE FUNCTION
+async function runCode() {
+  let output = document.getElementById("output");
+  let plot = document.getElementById("plot");
+
+  output.textContent = "Running...";
+  plot.innerHTML = "";
+
+  try {
+    // ✅ Reset output
     pyodide.runPython(`
 import sys
 from io import StringIO
+import matplotlib.pyplot as plt
+
 sys.stdout = StringIO()
+sys.stderr = StringIO()
+plt.close('all')
 `);
 
     let code = document.getElementById("code").value;
 
     await pyodide.runPythonAsync(code);
 
-    let result = pyodide.runPython("sys.stdout.getvalue()");
-    output.textContent = result;
+    // ✅ Show text output
+    let text = pyodide.runPython(`
+sys.stdout.getvalue() + sys.stderr.getvalue()
+`);
+    output.textContent = text;
 
-  } catch (err) {
-    output.textContent = err;
+    // ✅ Show plot if any
+    let img = pyodide.runPython(`
+import matplotlib.pyplot as plt
+import io, base64
+
+if plt.get_fignums():
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+    base64.b64encode(buf.read()).decode()
+else:
+    ""
+`);
+
+    if (img) {
+      plot.innerHTML = "<img src='data:image/png;base64," + img + "'rr) {
+    output.textContent = "❌ Error:\\n" + err;
   }
 }
 </script>
 
 </body>
 </html>
+``
