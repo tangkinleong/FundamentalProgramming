@@ -34,8 +34,8 @@ button {
 <textarea id="code">
 import pandas as pd
 sales_data = {
-    'Month': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    'Sales (RM)': [12000, 15000, 22000, 19000, 25000, 28000]
+  'Month': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  'Sales (RM)': [12000, 15000, 22000, 19000, 25000, 28000]
 }
 df_sales = pd.DataFrame(sales_data).set_index('Month') #set_index() makes month the row label
 #Create a line chart to show sales trends
