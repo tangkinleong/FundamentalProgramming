@@ -41,7 +41,7 @@ print(data)
 <button onclick="runCode()">▶ Run Code</button>
 
 <h3>Output</h3>
-<div id="output"></div>
+<div id="output">Loading...</div>
 
 <div id="plot"></div>
 
@@ -49,26 +49,26 @@ print(data)
 let pyodide;
 let ready = false;
 
+// ✅ Initialize Pyodide + packages
 async function init() {
   pyodide = await loadPyodide();
 
   document.getElementById("output").textContent = "Loading packages...";
 
-  // Load packages
   await pyodide.loadPackage(["pandas", "matplotlib", "micropip"]);
 
-  // Install seaborn
   await pyodide.runPythonAsync(`
 import micropip
 await micropip.install("seaborn")
 `);
 
   ready = true;
-  document.getElementById("output").textContent = "✅ Ready!";
+  document.getElementById("output").textContent = "✅ Ready! Click Run Code.";
 }
 
 init();
 
+// ✅ Run Code Button
 async function runCode() {
   let output = document.getElementById("output");
   let plot = document.getElementById("plot");
@@ -82,7 +82,7 @@ async function runCode() {
   plot.innerHTML = "";
 
   try {
-    // Capture output
+    // Capture print output
     pyodide.runPython(`
 import sys
 from io import StringIO
@@ -97,11 +97,11 @@ plt.close('all')
     // Run user code
     await pyodide.runPythonAsync(code);
 
-    // Get text output
+    // Get printed output
     let result = pyodide.runPython("sys.stdout.getvalue()");
     output.textContent = result;
 
-    // Get plot image (if any)
+    // Capture plot (if exists)
     let img = pyodide.runPython(`
 import matplotlib.pyplot as plt
 import io, base64
@@ -116,8 +116,7 @@ else:
 `);
 
     if (img) {
-      plot.innerHTML = "<img src='data:image/png;base64," } catch (err) {
-    output.textContent = "❌ Error:\n" + err;
+      plot.innerHTML = "<img src='data:image/png;base64," +t.textContent = "❌ Error:\\n" + err;
   }
 }
 </script>
