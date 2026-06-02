@@ -21,7 +21,7 @@ button { padding: 10px; margin-top: 10px; }
 <body>
 
 
-<textarea id="code">
+<textarea id="code" oninput="autoResize(this)">
 import pandas as pd
 print(pd.Series([1,2,3]))
 </textarea>
@@ -33,6 +33,12 @@ print(pd.Series([1,2,3]))
 <div id="output">⏳ Initializing...</div>
 
 <script>
+function autoResize(textarea) {
+  textarea.style.height = "auto"; // reset height
+  textarea.style.height = textarea.scrollHeight + "px"; // adjust to content
+}
+
+  
 let pyodide;
 let ready = false;
 
