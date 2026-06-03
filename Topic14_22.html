@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+
+<style>
+body { font-family: Arial; margin: 20px; }
+
+textarea {
+  width: 100%;
+  min-height: 80px;
+  font-family: monospace;
+  overflow: hidden;
+  resize: none;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+button {
+  padding: 10px;
+  margin-top: 10px;
+}
+
+#output {
+  background: black;
+  color: lime;
+  padding: 10px;
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+</style>
+</head>
+
+<body>
+
+<textarea id="code">
+import pandas as pd
+
+frame = [df1, df2]
+res2 = pd.concat(frame, keys=['A', 'B’])
+
+res.to_html()
+</textarea>
+
+<br>
+<button onclick="runCode()">▶ Run Code</button>
+
+<h4>Output</h4>
+<div id="output">Loading Python...</div>
+
+<script>
+let pyodide;
+
+// ✅ Hidden CSV 1
+let data1 = `Name,Age,Subject,Score,Grade
+Alice,15,Math,95,A
+Bob,16,Science,88,B
+Charlie,15,English,92,A
+Diana,17,Math,78,C
+Ethan,16,Science,85,B
+Fiona,15,History,89,B
+George,17,Math,91,A
+Hannah,16,English,75,C`;
+
+let data2 = `Name,Age,Subject,Score,Grade
+Abu,19,Malay,90,A
+John,17,English,89,B
+May,16,Add. Math,98,A
+Danny,17,Geography,71,C
+Eugene,16,Add. Math,88,B
+Ben,15,Geography,82,B
+Ahmad,17,Math,60,D
+Murni,19,Malay,75,C`;
+
+// ✅ Auto resize
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  requestAnimationFrame(() => {
+    textarea.style.height = textarea.scrollHeight + "px";
+  });
+}
+
+// ✅ Init
+async function init() {
+  pyodide = await loadPyodide();
+
+  // ✅ Inject BOTH CSVs
+  pyodide.FS.writeFile("student_scores.csv", data1);
+  pyodide.FS.writeFile("student_scores2.csv", data2);
+
+  document.getElementById("output").textContent = "✅ Python Ready!";
+
+  const textarea = document.getElementById("code");
+
+  autoResize(textarea);
+  setTimeout(() => autoResize(textarea), 50);
+
+  textarea.addEventListener("input", function () {
+    autoResize(this);
+  });
+}
+init();
+
+// ✅ Load packages
+async function loadPackages(code) {
+  let output = document.getElementById("output");
+
+  if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
+    output.textContent = "Loading pandas...";
+    await pyodide.loadPackage("pandas");
+  }
+}
+
+// ✅ Run code
+async function runCode() {
+  let output = document.getElementById("output");
+  let code = document.getElementById("code").value;
+
+  output.innerHTML = "Preparing environment...";
+
+  try {
+    await loadPackages(code);
+
+    // Capture print()
+    pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+`);
+
+    let result = await pyodide.runPythonAsync(code);
+    let printed = pyodide.runPython("sys.stdout.getvalue()");
+
+    // ✅ Correct HTML detection
+    if (result && result.toString().trim().startsWith("<")) {
+      output.innerHTML = "<pre>" + printed + "</pre>" + result;
+    } else {
+      output.textContent = printed;
+    }
+
+  } catch (err) {
+    output.textContent = "❌ Error:\\n" + err;
+  }
+}
+</script>
+
+</body>
+</html>
