@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+
+<style>
+body { font-family: Arial; margin: 20px; }
+
+textarea {
+  width: 100%;
+  min-height: 80px;
+  font-family: monospace;
+  overflow: hidden;
+  resize: none;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+button {
+  padding: 10px;
+  margin-top: 10px;
+}
+
+#output {
+  background: black;
+  color: lime;
+  padding: 10px;
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+</style>
+</head>
+
+<body>
+
+<textarea id="code">
+import pandas as pd
+student_data = {'Name': ['Alice', 'Bob', 'Charlie'],
+                'Math_Score': [95, 78, 88],
+                'English_Score': [89, 92, 85]}
+grades_df = pd.DataFrame(student_data)
+print(grades_df)
+
+print("\nTable output below:\n")
+grades_df.to_html()
+</textarea>
+<br>
+<button onclick="runCode()">▶ Run Code</button>
+
+<h4>Output</h4>
+<div id="output">Loading Python...</div>
+
+<script>
+
+
+let pyodide;
+
+//Data
+let data = `BookID,Title,Author,Genre,AvgRating,PublishedYear
+101,The Dragon's Echo,Lila Rose,Fantasy,4.5,2021
+102,Cybernetic Dawn,Kenji Tanaka,Sci-Fi,4.2,2023
+103,The Silent Witness,James Peterson,Mystery,4.8,2020
+104,A Forest of Whispers,Lila Rose,Fantasy,4.4,2022
+105,Nexus Point,Kenji Tanaka,Sci-Fi,4.0,2024
+106,The Last Alibi,James Peterson,Mystery,4.6,2023
+107,Starfall,Lila Rose,Fantasy,4.9,2024`;
+
+pyodide.FS.writeFile("books.csv", data);
+
+
+// ✅ AUTO RESIZE (FIXED VERSION)
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  requestAnimationFrame(() => {
+    textarea.style.height = textarea.scrollHeight + "px";
+  });
+}
+
+// ✅ INIT
+async function init() {
+  pyodide = await loadPyodide();
+
+  document.getElementById("output").textContent = "✅ Python Ready!";
+
+  const textarea = document.getElementById("code");
+
+  // ✅ FIX: run twice to ensure correct height
+  autoResize(textarea);
+  setTimeout(() => autoResize(textarea), 50);
+
+  textarea.addEventListener("input", function () {
+    autoResize(this);
+  });
+}
+init();
+
+// ✅ LOAD PACKAGES
+async function loadPackages(code) {
+  let output = document.getElementById("output");
+
+  if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
+    output.textContent = "Loading pandas...";
+    await pyodide.loadPackage("pandas");
+  }
+}
+
+// ✅ RUN CODE
+async function runCode() {
+  let output = document.getElementById("output");
+  let code = document.getElementById("code").value;
+
+  output.textContent = "Preparing environment...";
+
+  try {
+    await loadPackages(code);
+
+    // ✅ Capture print()
+    pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+`);
+
+    // ✅ Run user code
+    let result = await pyodide.runPythonAsync(code);
+
+    // ✅ Get print output
+    let printed = pyodide.runPython("sys.stdout.getvalue()");
+
+    // ✅ Detect HTML (for tables)
+    if (result && result.toString().trim().startsWith("<")) {
+      output.innerHTML = printed + result;
+    } else {
+      output.textContent = printed;
+    }
+
+  } catch (err) {
+    output.textContent = "❌ Error:\\n" + err;
+  }
+}
+</script>
+
+</body>
+</html>
