@@ -32,7 +32,10 @@ button {
 
 <body>
 <textarea id="code">
-name = input("Please enter your name: ")
+<input type="text" id="nameInput" placeholder="Enter your name">
+<button onclick="runPython()">Submit</button>
+
+<p id="output"></p>
 print("Hey there, " + name + ", I hope you’re doing great! ")
 </textarea>
 
