@@ -36,7 +36,7 @@ button {
 <textarea id="code">
 import pandas as pd
 df = pd.read_csv("books.csv")
-# Select multiple columns for a row
+# Select multiple rows and columns
 df.loc[[2, 4], ['Title', 'Author']].to_html()
 </textarea>
 
