@@ -34,12 +34,14 @@ button {
 <textarea id="code">
 balance = 0
 target = 100
+
 while balance < target:
-    deposit = float(input(f"Current balance: ${balance:.2f}. Enter deposit amount: "))
+    deposit = 20   # simulate user input
     if deposit > 0:
         balance += deposit
     else:
         print("Please enter a positive amount.")
+    print("Balance:", balance)
 print(f"Target of ${target:.2f} reached! Final balance: ${balance:.2f}.")
 </textarea>
 <br>
