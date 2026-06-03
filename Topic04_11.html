@@ -43,6 +43,27 @@ print("Hey there, " + name + ", I hope you’re doing great! ")
 <div id="output">Loading Python...</div>
 
 <script>
+
+async function runPython() {
+    let pyodide = await loadPyodide();
+
+    // Get value from HTML input
+    let name = document.getElementById("nameInput").value;
+
+    // Pass it into Python
+    pyodide.globals.set("name", name);
+
+    let result = pyodide.runPython(`
+print("Hey there, " + name + ", I hope you're doing great!")
+"Hey there, " + name + ", I hope you're doing great!"
+`);
+
+    document.getElementById("output").innerText = result;
+}
+
+
+
+  
 let pyodide;
 
 // ✅ AUTO RESIZE FUNCTION
