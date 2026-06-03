@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
 
@@ -8,11 +8,8 @@ body { font-family: Arial; margin: 20px; }
 
 textarea {
   width: 100%;
-  min-height: 50px;
+  min-height: 80px;
   font-family: monospace;
-  overflow: hidden;
-  resize: none;
-  box-sizing: border-box;
 }
 
 button {
@@ -31,14 +28,20 @@ button {
 </head>
 
 <body>
+
 <textarea id="code">
 import pandas as pd
+
 shopping_list = pd.Series(['Apples', 'Bananas', 'Milk', 'Bread'])
+
+print("This is normal print output:\n")
 print(shopping_list)
-print("\n")
-print("or")
-display(shopping_list)
+
+print("\nNow display as table:")
+
+shopping_list.to_frame(name="Items").to_html()
 </textarea>
+
 <br>
 <button onclick="runCode()">▶ Run Code</button>
 
@@ -48,88 +51,52 @@ display(shopping_list)
 <script>
 let pyodide;
 
-// ✅ AUTO RESIZE FUNCTION
-function autoResize(textarea) {
-  textarea.style.height = "auto";
-  textarea.style.height = textarea.scrollHeight + "px";
-}
-
-// ✅ INIT (FAST LOAD)
+// ✅ INIT
 async function init() {
-  pyodide = await loadPyodide();
-
-  document.getElementById("output").textContent = "✅ Python Ready!";
-
-  const textarea = document.getElementById("code");
-
-  // ✅ Resize on load
-  autoResize(textarea);
-
-  // ✅ Resize when typing
-  textarea.addEventListener("input", function() {
-    autoResize(this);
-  });
+    pyodide = await loadPyodide();
+    document.getElementById("output").textContent = "✅ Python Ready!";
 }
-
 init();
 
-
-// ✅ LOAD PACKAGES ONLY WHEN NEEDED
+// ✅ LOAD PACKAGES
 async function loadPackages(code) {
-  let output = document.getElementById("output");
-
-  if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
-    output.textContent = "Loading pandas...";
-    await pyodide.loadPackage("pandas");
-  }
-
-  if (code.includes("matplotlib") && !pyodide.loadedPackages["matplotlib"]) {
-    output.textContent = "Loading matplotlib...";
-    await pyodide.loadPackage("matplotlib");
-  }
-
-  if (code.includes("seaborn")) {
-    output.textContent = "Loading seaborn...";
-
-    if (!pyodide.loadedPackages["micropip"]) {
-      await pyodide.loadPackage("micropip");
+    if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
+        document.getElementById("output").textContent = "Loading pandas...";
+        await pyodide.loadPackage("pandas");
     }
-
-    await pyodide.runPythonAsync(`
-import micropip
-await micropip.install("seaborn")
-`);
-  }
-from IPython.display import display
 }
-
 
 // ✅ RUN CODE
 async function runCode() {
-  let output = document.getElementById("output");
+    let output = document.getElementById("output");
+    let code = document.getElementById("code").value;
 
-  let code = document.getElementById("code").value;
+    try {
+        await loadPackages(code);
 
-  output.textContent = "Preparing environment...";
-
-  try {
-    await loadPackages(code);
-
-    // ✅ Capture output
-    pyodide.runPython(`
+        // Capture print()
+        pyodide.runPython(`
 import sys
 from io import StringIO
 sys.stdout = StringIO()
 `);
 
-    await pyodide.runPythonAsync(code);
+        // Run user code
+        let result = await pyodide.runPythonAsync(code);
 
-    let result = pyodide.runPython("sys.stdout.getvalue()");
-    output.textContent = result;
+        // Get print output
+        let printed = pyodide.runPython("sys.stdout.getvalue()");
 
-  } catch (err) {
-    output.textContent = "❌ Error:\\n" + err;
-  }
+        // ✅ Detect HTML (table)
+        if (result && result.toString().trim().startsWith("<")) {
+            output.innerHTML = printed + result;   // print + table
+        } else {
+            output.textContent = printed;
+        }
+
+    } catch (err) {
+        output.textContent = "❌ Error:\\n" + err;
+    }
 }
 </script>
 
