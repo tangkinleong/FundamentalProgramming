@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+
+<style>
+body { font-family: Arial; margin: 20px; }
+
+textarea {
+  width: 100%;
+  min-height: 50px;
+  font-family: monospace;
+  overflow: hidden;
+  resize: none;
+  box-sizing: border-box;
+}
+
+button {
+  padding: 10px;
+  margin-top: 10px;
+}
+
+#output {
+  background: black;
+  color: lime;
+  padding: 10px;
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+</style>
+</head>
+
+<body>
+word = "Python"
+repeated_word = word * 3
+print(repeated_word)
+</textarea>
+
+<br>
+<button onclick="runCode()">▶ Run Code</button>
+
+<h4>Output</h4>
+<div id="output">Loading Python...</div>
+
+<script>
+let pyodide;
+
+// ✅ AUTO RESIZE FUNCTION
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+}
+
+// ✅ INIT (FAST LOAD)
+async function init() {
+  pyodide = await loadPyodide();
+
+  document.getElementById("output").textContent = "✅ Python Ready!";
+
+  const textarea = document.getElementById("code");
+
+  // ✅ Resize on load
+  autoResize(textarea);
+
+  // ✅ Resize when typing
+  textarea.addEventListener("input", function() {
+    autoResize(this);
+  });
+}
+
+init();
+
+
+// ✅ LOAD PACKAGES ONLY WHEN NEEDED
+async function loadPackages(code) {
+  let output = document.getElementById("output");
+
+  if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
+    output.textContent = "Loading pandas...";
+    await pyodide.loadPackage("pandas");
+  }
+
+  if (code.includes("matplotlib") && !pyodide.loadedPackages["matplotlib"]) {
+    output.textContent = "Loading matplotlib...";
+    await pyodide.loadPackage("matplotlib");
+  }
+
+  if (code.includes("seaborn")) {
+    output.textContent = "Loading seaborn...";
+
+    if (!pyodide.loadedPackages["micropip"]) {
+      await pyodide.loadPackage("micropip");
+    }
+
+    await pyodide.runPythonAsync(`
+import micropip
+await micropip.install("seaborn")
+`);
+  }
+}
+
+
+// ✅ RUN CODE
+async function runCode() {
+  let output = document.getElementById("output");
+
+  let code = document.getElementById("code").value;
+
+  output.textContent = "Preparing environment...";
+
+  try {
+    await loadPackages(code);
+
+    // ✅ Capture output
+    pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+`);
+
+    await pyodide.runPythonAsync(code);
+
+    let result = pyodide.runPython("sys.stdout.getvalue()");
+    output.textContent = result;
+
+  } catch (err) {
+    output.textContent = "❌ Error:\\n" + err;
+  }
+}
+</script>
+
+</body>
+</html>
