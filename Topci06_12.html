@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+
+<style>
+body { font-family: Arial; margin: 20px; }
+
+textarea {
+  width: 100%;
+  min-height: 50px;
+  font-family: monospace;
+  overflow: hidden;
+  resize: none;
+  box-sizing: border-box;
+}
+
+button {
+  padding: 10px;
+  margin-top: 10px;
+}
+
+#output {
+  background: black;
+  color: lime;
+  padding: 10px;
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+</style>
+</head>
+
+<body>
+<textarea id="code">
+# 1. Basic Assignment (=)
+# Assign an initial value to the variable 'x'.
+x = 20
+print(f"Initial value using '=': \t\t x = {x}")
+
+# 2. Add and Assign (+=)
+# This is equivalent to x = x + 5
+x += 5
+print(f"After using '+=' with 5: \t\t x = {x}")
+
+# 3. Subtract and Assign (-=)
+# This is equivalent to x = x - 10
+x -= 10
+print(f"After using '-=' with 10: \t\t x = {x}")
+
+# 4. Multiply and Assign (*=)
+# This is equivalent to x = x * 4
+x *= 4
+print(f"After using '*=' with 4: \t\t x = {x}")
+
+# 5. Divide and Assign (/=)
+# This is equivalent to x = x / 2. This always results in a float.
+x /= 2
+print(f"After using '/=' with 2: \t\t x = {x}")
+</textarea>
+
+<br>
+<button onclick="runCode()">▶ Run Code</button>
+
+<h4>Output</h4>
+<div id="output">Loading Python...</div>
+
+<script>
+let pyodide;
+
+// ✅ AUTO RESIZE FUNCTION
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+}
+
+// ✅ INIT (FAST LOAD)
+async function init() {
+  pyodide = await loadPyodide();
+
+  document.getElementById("output").textContent = "✅ Python Ready!";
+
+  const textarea = document.getElementById("code");
+
+  // ✅ Resize on load
+  autoResize(textarea);
+
+  // ✅ Resize when typing
+  textarea.addEventListener("input", function() {
+    autoResize(this);
+  });
+}
+
+init();
+
+
+// ✅ LOAD PACKAGES ONLY WHEN NEEDED
+async function loadPackages(code) {
+  let output = document.getElementById("output");
+
+  if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
+    output.textContent = "Loading pandas...";
+    await pyodide.loadPackage("pandas");
+  }
+
+  if (code.includes("matplotlib") && !pyodide.loadedPackages["matplotlib"]) {
+    output.textContent = "Loading matplotlib...";
+    await pyodide.loadPackage("matplotlib");
+  }
+
+  if (code.includes("seaborn")) {
+    output.textContent = "Loading seaborn...";
+
+    if (!pyodide.loadedPackages["micropip"]) {
+      await pyodide.loadPackage("micropip");
+    }
+
+    await pyodide.runPythonAsync(`
+import micropip
+await micropip.install("seaborn")
+`);
+  }
+}
+
+
+// ✅ RUN CODE
+async function runCode() {
+  let output = document.getElementById("output");
+
+  let code = document.getElementById("code").value;
+
+  output.textContent = "Preparing environment...";
+
+  try {
+    await loadPackages(code);
+
+    // ✅ Capture output
+    pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+`);
+
+    await pyodide.runPythonAsync(code);
+
+    let result = pyodide.runPython("sys.stdout.getvalue()");
+    output.textContent = result;
+
+  } catch (err) {
+    output.textContent = "❌ Error:\\n" + err;
+  }
+}
+</script>
+
+</body>
+</html>
