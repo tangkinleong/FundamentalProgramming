@@ -36,6 +36,9 @@ button {
 <textarea id="code">
 import pandas as pd
 
+df1 = pd.read_csv('student_scores.csv', index_col='Name')
+df2 = pd.read_csv('student_scores2.csv', index_col='Name')
+
 frame = [df1, df2]
 res2 = pd.concat(frame, keys=['A', 'B'])
 
