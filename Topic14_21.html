@@ -54,16 +54,25 @@ res.to_html()
 let pyodide;
 
 // ✅ Hidden CSV 1
-let data1 = `Name,Math,Science
-Alice,85,90
-Bob,78,88
-Charlie,92,85`;
+let data1 = `Name,Age,Subject,Score,Grade
+Alice,15,Math,95,A
+Bob,16,Science,88,B
+Charlie,15,English,92,A
+Diana,17,Math,78,C
+Ethan,16,Science,85,B
+Fiona,15,History,89,B
+George,17,Math,91,A
+Hannah,16,English,75,C`;
 
-// ✅ Hidden CSV 2
-let data2 = `Name,Math,Science
-David,80,87
-Eve,95,91
-Frank,88,84`;
+let data2 = `Name,Age,Subject,Score,Grade
+Abu,19,Malay,90,A
+John,17,English,89,B
+May,16,Add. Math,98,A
+Danny,17,Geography,71,C
+Eugene,16,Add. Math,88,B
+Ben,15,Geography,82,B
+Ahmad,17,Math,60,D
+Murni,19,Malay,75,C`;
 
 // ✅ Auto resize
 function autoResize(textarea) {
