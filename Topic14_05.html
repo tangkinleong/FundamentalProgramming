@@ -35,15 +35,13 @@ button {
 
 <textarea id="code">
 import pandas as pd
-student_data = {'Name': ['Alice', 'Bob', 'Charlie'],
-                'Math_Score': [95, 78, 88],
-                'English_Score': [89, 92, 85]}
-grades_df = pd.DataFrame(student_data)
-print(grades_df)
+df = pd.read_csv("books.csv")
+print(df)
 
 print("\nTable output below:\n")
-grades_df.to_html()
+df.to_html()
 </textarea>
+
 <br>
 <button onclick="runCode()">▶ Run Code</button>
 
@@ -51,11 +49,9 @@ grades_df.to_html()
 <div id="output">Loading Python...</div>
 
 <script>
-
-
 let pyodide;
 
-//Data
+// ✅ Hidden CSV data (no GitHub, fully embedded)
 let data = `BookID,Title,Author,Genre,AvgRating,PublishedYear
 101,The Dragon's Echo,Lila Rose,Fantasy,4.5,2021
 102,Cybernetic Dawn,Kenji Tanaka,Sci-Fi,4.2,2023
@@ -65,10 +61,7 @@ let data = `BookID,Title,Author,Genre,AvgRating,PublishedYear
 106,The Last Alibi,James Peterson,Mystery,4.6,2023
 107,Starfall,Lila Rose,Fantasy,4.9,2024`;
 
-pyodide.FS.writeFile("books.csv", data);
-
-
-// ✅ AUTO RESIZE (FIXED VERSION)
+// ✅ AUTO RESIZE
 function autoResize(textarea) {
   textarea.style.height = "auto";
   requestAnimationFrame(() => {
@@ -80,11 +73,13 @@ function autoResize(textarea) {
 async function init() {
   pyodide = await loadPyodide();
 
+  // ✅ Inject CSV AFTER pyodide loads
+  pyodide.FS.writeFile("books.csv", data);
+
   document.getElementById("output").textContent = "✅ Python Ready!";
 
   const textarea = document.getElementById("code");
 
-  // ✅ FIX: run twice to ensure correct height
   autoResize(textarea);
   setTimeout(() => autoResize(textarea), 50);
 
@@ -109,7 +104,7 @@ async function runCode() {
   let output = document.getElementById("output");
   let code = document.getElementById("code").value;
 
-  output.textContent = "Preparing environment...";
+  output.innerHTML = "Preparing environment...";
 
   try {
     await loadPackages(code);
@@ -124,10 +119,10 @@ sys.stdout = StringIO()
     // ✅ Run user code
     let result = await pyodide.runPythonAsync(code);
 
-    // ✅ Get print output
+    // ✅ Get printed output
     let printed = pyodide.runPython("sys.stdout.getvalue()");
 
-    // ✅ Detect HTML (for tables)
+    // ✅ Detect HTML (tables)
     if (result && result.toString().trim().startsWith("<")) {
       output.innerHTML = printed + result;
     } else {
