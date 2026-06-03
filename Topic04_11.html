@@ -62,3 +62,24 @@ sys.stdout = StringIO()
 `);
 
     // ✅ OVERRIDE input()
+    pyodide.globals.set("user_input_value", nameValue);
+
+    pyodide.runPython(`
+import builtins
+builtins.input = lambda prompt="": user_input_value
+`);
+
+    // ✅ Run user code
+    await pyodide.runPythonAsync(code);
+
+    let result = pyodide.runPython("sys.stdout.getvalue()");
+    output.textContent = result;
+
+  } catch (err) {
+    output.textContent = "❌ Error:\n" + err;
+  }
+}
+</script>
+
+</body>
+</html>
