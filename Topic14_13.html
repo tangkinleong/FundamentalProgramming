@@ -37,8 +37,7 @@ button {
 import pandas as pd
 df = pd.read_csv("books.csv")
 title = df['Title']
-title.head().to_html()
-
+print(df['Title'].head())
 </textarea>
 
 <br>
