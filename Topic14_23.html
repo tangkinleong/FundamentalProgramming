@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
 
 <style>
@@ -9,11 +8,12 @@ body { font-family: Arial; margin: 20px; }
 
 textarea {
   width: 100%;
-  min-height: 100px;
+  min-height: 80px;
   font-family: monospace;
   overflow: hidden;
   resize: none;
   box-sizing: border-box;
+  line-height: 1.5;
 }
 
 button {
@@ -26,18 +26,7 @@ button {
   color: lime;
   padding: 10px;
   white-space: pre-wrap;
-}
-
-/* ✅ Table styling */
-table {
-  border-collapse: collapse;
-  margin-top: 10px;
-  background: white;
-  color: black;
-}
-th, td {
-  border: 1px solid #ccc;
-  padding: 5px 10px;
+  min-height: 120px;
 }
 </style>
 </head>
@@ -47,12 +36,13 @@ th, td {
 <textarea id="code">
 import pandas as pd
 
-df_score = pd.read_csv('student_scores3.csv', index_col='StudentID')
-df_group = pd.read_csv('student_group.csv', index_col='StudentID')
+df1 = pd.read_csv('student_scores.csv', index_col='Name')
+df2 = pd.read_csv('student_scores2.csv', index_col='Name')
 
-res3 = df_score.join(df_group)
+frame = [df1, df2]
+res2 = pd.concat(frame, keys=['A', 'B'])
 
-res3.to_html()
+res2.to_html()
 </textarea>
 
 <br>
@@ -64,8 +54,8 @@ res3.to_html()
 <script>
 let pyodide;
 
-// ✅ SAMPLE DATA (replace with your real data if needed)
-let data_scores = 'Name,Age,Subject,Score,Grade
+// ✅ Hidden CSV 1
+let data1 = `Name,Age,Subject,Score,Grade
 Alice,15,Math,95,A
 Bob,16,Science,88,B
 Charlie,15,English,92,A
@@ -73,45 +63,48 @@ Diana,17,Math,78,C
 Ethan,16,Science,85,B
 Fiona,15,History,89,B
 George,17,Math,91,A
-Hannah,16,English,75,C';
+Hannah,16,English,75,C`;
 
-let data_group = 'StudentID,Study Group,Mentor
-ID001,1,Mr Bean
-ID002,2,Ms Kristine
-ID003,1,Mr Bean
-ID004,2,Ms Kristine
-ID005,1,Mr Bean
-ID006,2,Ms Kristine
-ID007,1,Mr Bean
-ID008,2,Ms Kristine';
+let data2 = `Name,Age,Subject,Score,Grade
+Abu,19,Malay,90,A
+John,17,English,89,B
+May,16,Add. Math,98,A
+Danny,17,Geography,71,C
+Eugene,16,Add. Math,88,B
+Ben,15,Geography,82,B
+Ahmad,17,Math,60,D
+Murni,19,Malay,75,C`;
 
-
-// ✅ AUTO RESIZE
+// ✅ Auto resize
 function autoResize(textarea) {
   textarea.style.height = "auto";
-  textarea.style.height = textarea.scrollHeight + "px";
+  requestAnimationFrame(() => {
+    textarea.style.height = textarea.scrollHeight + "px";
+  });
 }
 
-// ✅ INIT
+// ✅ Init
 async function init() {
   pyodide = await loadPyodide();
 
-  // inject CSV files
-  pyodide.FS.writeFile("student_scores3.csv", data_scores);
-  pyodide.FS.writeFile("student_group.csv", data_group);
+  // ✅ Inject BOTH CSVs
+  pyodide.FS.writeFile("student_scores.csv", data1);
+  pyodide.FS.writeFile("student_scores2.csv", data2);
 
   document.getElementById("output").textContent = "✅ Python Ready!";
 
-  let textarea = document.getElementById("code");
+  const textarea = document.getElementById("code");
+
   autoResize(textarea);
+  setTimeout(() => autoResize(textarea), 50);
 
-  textarea.addEventListener("input", () => autoResize(textarea));
+  textarea.addEventListener("input", function () {
+    autoResize(this);
+  });
 }
-
 init();
 
-
-// ✅ LOAD PACKAGES
+// ✅ Load packages
 async function loadPackages(code) {
   let output = document.getElementById("output");
 
@@ -121,33 +114,32 @@ async function loadPackages(code) {
   }
 }
 
-
-// ✅ RUN CODE
+// ✅ Run code
 async function runCode() {
   let output = document.getElementById("output");
   let code = document.getElementById("code").value;
 
-  output.textContent = "Running...";
+  output.innerHTML = "Preparing environment...";
 
   try {
     await loadPackages(code);
 
+    // Capture print()
     pyodide.runPython(`
 import sys
 from io import StringIO
-
 sys.stdout = StringIO()
-sys.stderr = StringIO()
 `);
 
-    await pyodide.runPythonAsync(code);
+    let result = await pyodide.runPythonAsync(code);
+    let printed = pyodide.runPython("sys.stdout.getvalue()");
 
-    let result = pyodide.runPython(`
-sys.stdout.getvalue() + sys.stderr.getvalue()
-`);
-
-    // ✅ IMPORTANT: render HTML (table)
-    output.innerHTML = result;
+    // ✅ Correct HTML detection
+    if (result && result.toString().trim().startsWith("<")) {
+      output.innerHTML = "<pre>" + printed + "</pre>" + result;
+    } else {
+      output.textContent = printed;
+    }
 
   } catch (err) {
     output.textContent = "❌ Error:\\n" + err;
