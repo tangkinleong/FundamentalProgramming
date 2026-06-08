@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
 
@@ -8,11 +8,12 @@ body { font-family: Arial; margin: 20px; }
 
 textarea {
   width: 100%;
-  min-height: 50px;
+  min-height: 80px;
   font-family: monospace;
   overflow: hidden;
   resize: none;
   box-sizing: border-box;
+  line-height: 1.5;
 }
 
 button {
@@ -31,64 +32,67 @@ button {
 </head>
 
 <body>
+
 <textarea id="code">
 import pandas as pd
-import plotly.express as px
-sales_data = {
-    'Month': ['Jan', 'Feb', 'Mar', 'Apr'],
-    'Sales (RM)': [12000, 15000, 22000, 19000],
-    'Online Sales (RM)': [5000, 7000, 12000, 9000],
-    'Retail Sales (RM)': [7000, 8000, 10000, 10000]
-}
-df = pd.DataFrame(sales_data)
-heatmap_data = df.set_index('Month').T
-fig = px.imshow(
-    heatmap_data,
-    labels=dict(x="Month", y="Sales Type", color="Sales (RM)"),
-    x=heatmap_data.columns,
-    y=heatmap_data.index,
-    color_continuous_scale='Blues',
-    text_auto=True
-)
-fig.show()
+import matplotlib.pyplot as plt
+
+
+sales_df = pd.read_csv('sales.csv')
+sales_df.head()
+
 </textarea>
 
 <br>
 <button onclick="runCode()">▶ Run Code</button>
 
-<h3>Output</h3>
+<h4>Output</h4>
 <div id="output">Loading Python...</div>
 
 <script>
 let pyodide;
 
-// ✅ AUTO RESIZE FUNCTION
+// ✅ Hidden CSV 1
+let data1 = `Date,Region,Category,Product,Sales,Profit
+2023-10-17,South,Furniture,Chair,1226,206
+2023-10-18,East,Furniture,Desk,1559,30
+2023-10-19,West,Electronic,Lamp,960,321
+2023-10-20,South,Furniture,Chair,2331,400
+2023-10-21,East,Furniture,Chair,1226,401
+2023-10-22,West,Furniture,Desk,1452,562
+2023-10-23,South,Furniture,Chair,1226,320`;
+
+
+// ✅ Auto resize
 function autoResize(textarea) {
   textarea.style.height = "auto";
-  textarea.style.height = textarea.scrollHeight + "px";
+  requestAnimationFrame(() => {
+    textarea.style.height = textarea.scrollHeight + "px";
+  });
 }
 
-// ✅ INIT (FAST LOAD)
+// ✅ Init
 async function init() {
   pyodide = await loadPyodide();
+
+  // ✅ Inject BOTH CSVs
+  pyodide.FS.writeFile("sales.csv", data1);
+
 
   document.getElementById("output").textContent = "✅ Python Ready!";
 
   const textarea = document.getElementById("code");
 
-  // ✅ Resize on load
   autoResize(textarea);
+  setTimeout(() => autoResize(textarea), 50);
 
-  // ✅ Resize when typing
-  textarea.addEventListener("input", function() {
+  textarea.addEventListener("input", function () {
     autoResize(this);
   });
 }
-
 init();
 
-
-// ✅ LOAD PACKAGES ONLY WHEN NEEDED
+// ✅ Load packages
 async function loadPackages(code) {
   let output = document.getElementById("output");
 
@@ -96,49 +100,34 @@ async function loadPackages(code) {
     output.textContent = "Loading pandas...";
     await pyodide.loadPackage("pandas");
   }
-
-  if (code.includes("matplotlib") && !pyodide.loadedPackages["matplotlib"]) {
-    output.textContent = "Loading matplotlib...";
-    await pyodide.loadPackage("matplotlib");
-  }
-
-  if (code.includes("seaborn")) {
-    output.textContent = "Loading seaborn...";
-
-    if (!pyodide.loadedPackages["micropip"]) {
-      await pyodide.loadPackage("micropip");
-    }
-
-    await pyodide.runPythonAsync(`
-import micropip
-await micropip.install("seaborn")
-`);
-  }
 }
 
-
-// ✅ RUN CODE
+// ✅ Run code
 async function runCode() {
   let output = document.getElementById("output");
-
   let code = document.getElementById("code").value;
 
-  output.textContent = "Preparing environment...";
+  output.innerHTML = "Preparing environment...";
 
   try {
     await loadPackages(code);
 
-    // ✅ Capture output
+    // Capture print()
     pyodide.runPython(`
 import sys
 from io import StringIO
 sys.stdout = StringIO()
 `);
 
-    await pyodide.runPythonAsync(code);
+    let result = await pyodide.runPythonAsync(code);
+    let printed = pyodide.runPython("sys.stdout.getvalue()");
 
-    let result = pyodide.runPython("sys.stdout.getvalue()");
-    output.textContent = result;
+    // ✅ Correct HTML detection
+    if (result && result.toString().trim().startsWith("<")) {
+      output.innerHTML = "<pre>" + printed + "</pre>" + result;
+    } else {
+      output.textContent = printed;
+    }
 
   } catch (err) {
     output.textContent = "❌ Error:\\n" + err;
