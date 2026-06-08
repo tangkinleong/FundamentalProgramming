@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
 
 <style>
@@ -8,12 +9,11 @@ body { font-family: Arial; margin: 20px; }
 
 textarea {
   width: 100%;
-  min-height: 80px;
+  min-height: 100px;
   font-family: monospace;
   overflow: hidden;
   resize: none;
   box-sizing: border-box;
-  line-height: 1.5;
 }
 
 button {
@@ -26,7 +26,18 @@ button {
   color: lime;
   padding: 10px;
   white-space: pre-wrap;
-  min-height: 120px;
+}
+
+/* ✅ Table styling */
+table {
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: white;
+  color: black;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 5px 10px;
 }
 </style>
 </head>
@@ -53,16 +64,16 @@ res3.to_html()
 <script>
 let pyodide;
 
-// ✅ Hidden CSV 1
-let data_scores = 'Name,Age,Subject,Score,Grade
-Alice,15,Math,95,A
-Bob,16,Science,88,B
-Charlie,15,English,92,A
-Diana,17,Math,78,C
-Ethan,16,Science,85,B
-Fiona,15,History,89,B
-George,17,Math,91,A
-Hannah,16,English,75,C';
+// ✅ SAMPLE DATA (replace with your real data if needed)
+let data_scores = 'StudentID,Name,Age,Subject,Score,Grade
+ID001,Alice,15,Math,95,A
+ID002,Bob,16,Science,88,B
+ID003,Charlie,15,English,92,A
+ID004,Diana,17,Math,78,C
+ID005,Ethan,16,Science,85,B
+ID006,Fiona,15,History,89,B
+ID007,George,17,Math,91,A
+ID008,Hannah,16,English,75,C';
 
 let data_group = 'StudentID,Study Group,Mentor
 ID001,1,Mr Bean
@@ -75,36 +86,32 @@ ID007,1,Mr Bean
 ID008,2,Ms Kristine';
 
 
-// ✅ Auto resize
+// ✅ AUTO RESIZE
 function autoResize(textarea) {
   textarea.style.height = "auto";
-  requestAnimationFrame(() => {
-    textarea.style.height = textarea.scrollHeight + "px";
-  });
+  textarea.style.height = textarea.scrollHeight + "px";
 }
 
-// ✅ Init
+// ✅ INIT
 async function init() {
   pyodide = await loadPyodide();
 
-  // ✅ Inject BOTH CSVs
+  // inject CSV files
   pyodide.FS.writeFile("student_scores3.csv", data_scores);
   pyodide.FS.writeFile("student_group.csv", data_group);
 
   document.getElementById("output").textContent = "✅ Python Ready!";
 
-  const textarea = document.getElementById("code");
-
+  let textarea = document.getElementById("code");
   autoResize(textarea);
-  setTimeout(() => autoResize(textarea), 50);
 
-  textarea.addEventListener("input", function () {
-    autoResize(this);
-  });
+  textarea.addEventListener("input", () => autoResize(textarea));
 }
+
 init();
 
-// ✅ Load packages
+
+// ✅ LOAD PACKAGES
 async function loadPackages(code) {
   let output = document.getElementById("output");
 
@@ -114,32 +121,33 @@ async function loadPackages(code) {
   }
 }
 
-// ✅ Run code
+
+// ✅ RUN CODE
 async function runCode() {
   let output = document.getElementById("output");
   let code = document.getElementById("code").value;
 
-  output.innerHTML = "Preparing environment...";
+  output.textContent = "Running...";
 
   try {
     await loadPackages(code);
 
-    // Capture print()
     pyodide.runPython(`
 import sys
 from io import StringIO
+
 sys.stdout = StringIO()
+sys.stderr = StringIO()
 `);
 
-    let result = await pyodide.runPythonAsync(code);
-    let printed = pyodide.runPython("sys.stdout.getvalue()");
+    await pyodide.runPythonAsync(code);
 
-    // ✅ Correct HTML detection
-    if (result && result.toString().trim().startsWith("<")) {
-      output.innerHTML = "<pre>" + printed + "</pre>" + result;
-    } else {
-      output.textContent = printed;
-    }
+    let result = pyodide.runPython(`
+sys.stdout.getvalue() + sys.stderr.getvalue()
+`);
+
+    // ✅ IMPORTANT: render HTML (table)
+    output.innerHTML = result;
 
   } catch (err) {
     output.textContent = "❌ Error:\\n" + err;
