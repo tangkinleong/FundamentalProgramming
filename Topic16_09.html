@@ -37,6 +37,7 @@ button {
 <h3>Python Code</h3>
 
 <textarea id="code">
+
 import pandas as pd
 import matplotlib.pyplot as plt
 sales_df = pd.read_csv('sales.csv')
@@ -44,7 +45,8 @@ plt.figure(figsize=(6, 6))
 sales_df.groupby('Category')['Sales'].sum().plot(kind='pie', autopct='%1.1f%%')
 plt.title('Sales Distribution by Category')
 plt.ylabel('')
-plt.tight_layout()plt.show()
+plt.tight_layout()
+plt.show()
 </textarea>
 
 <br>
