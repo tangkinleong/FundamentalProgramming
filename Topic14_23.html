@@ -35,14 +35,10 @@ button {
 
 <textarea id="code">
 import pandas as pd
-
-df1 = pd.read_csv('student_scores.csv', index_col='Name')
-df2 = pd.read_csv('student_scores2.csv', index_col='Name')
-
-frame = [df1, df2]
-res2 = pd.concat(frame, keys=['A', 'B'])
-
-res2.to_html()
+df_score = pd.read_csv('student_scores3.csv', index_col='StudentID’)
+df_group = pd.read_csv('student_group.csv', index_col='StudentID’)
+res3 = df_score.join(df_group)
+res3.to_html()
 </textarea>
 
 <br>
@@ -65,15 +61,15 @@ Fiona,15,History,89,B
 George,17,Math,91,A
 Hannah,16,English,75,C`;
 
-let data2 = `Name,Age,Subject,Score,Grade
-Abu,19,Malay,90,A
-John,17,English,89,B
-May,16,Add. Math,98,A
-Danny,17,Geography,71,C
-Eugene,16,Add. Math,88,B
-Ben,15,Geography,82,B
-Ahmad,17,Math,60,D
-Murni,19,Malay,75,C`;
+let data2 = `StudentID,Study Group,Mentor
+ID001,1,Mr Bean
+ID002,2,Ms Kristine
+ID003,1,Mr Bean
+ID004,2,Ms Kristine
+ID005,1,Mr Bean
+ID006,2,Ms Kristine
+ID007,1,Mr Bean
+ID008,2,Ms Kristine`;
 
 // ✅ Auto resize
 function autoResize(textarea) {
@@ -88,8 +84,8 @@ async function init() {
   pyodide = await loadPyodide();
 
   // ✅ Inject BOTH CSVs
-  pyodide.FS.writeFile("student_scores.csv", data1);
-  pyodide.FS.writeFile("student_scores2.csv", data2);
+  pyodide.FS.writeFile("student_scores3.csv", data1);
+  pyodide.FS.writeFile("student_group.csv", data2);
 
   document.getElementById("output").textContent = "✅ Python Ready!";
 
