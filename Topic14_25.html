@@ -36,13 +36,14 @@ button {
 <textarea id="code">
 import pandas as pd
 df1 = pd.read_csv('student_scores3.csv', index_col='StudentID')
-df1.sort_values(by='Age')
+ascending_df = df1.sort_values(by='Age')
 print("Sort in Ascending Order")
-print(df1.to_html())
+print(ascending_df.to_html())
+
 print("\nSort in Decscending Order")
-df2 = df1.copy()
-df2.sort_values(by='Age', ascending=False)
-print(df2.to_html())
+descending_df = df1.sort_values(by='Age', ascending=False)
+print("\nSort in Descending Order")
+print(descending_df.to_html())
 </textarea>
 
 <br>
