@@ -36,9 +36,9 @@ button {
 <textarea id="code">
 import pandas as pd
 
-df_score = pd.read_csv('student_scores3.csv', index_col='StudentID’)
-df_group2 = pd.read_csv('student_group2.csv', index_col='StudentID’)
-res4 = df_score.join(df_group2, how='outer’)
+df_score = pd.read_csv('student_scores3.csv', index_col='StudentID')
+df_group2 = pd.read_csv('student_group2.csv', index_col='StudentID')
+res4 = df_score.join(df_group2, how='outer')
 res4.to_html()
 </textarea>
 
@@ -62,15 +62,15 @@ ID006,Fiona,15,History,89,B
 ID007,George,17,Math,91,A
 ID008,Hannah,16,English,75,C`;
 
-let data2 = `Name,Age,Subject,Score,Grade
-Abu,19,Malay,90,A
-John,17,English,89,B
-May,16,Add. Math,98,A
-Danny,17,Geography,71,C
-Eugene,16,Add. Math,88,B
-Ben,15,Geography,82,B
-Ahmad,17,Math,60,D
-Murni,19,Malay,75,C';
+let data2 = `StudentID,Name,Age,Subject,Score,Grade
+ID009,Abu,19,Malay,90,A
+ID010,John,17,English,89,B
+ID011,May,16,Add. Math,98,A
+ID012,Danny,17,Geography,71,C
+ID013,Eugene,16,Add. Math,88,B
+ID014,Ben,15,Geography,82,B
+ID015,Ahmad,17,Math,60,D
+ID016,Murni,19,Malay,75,C`;
 
 // ✅ Auto resize
 function autoResize(textarea) {
