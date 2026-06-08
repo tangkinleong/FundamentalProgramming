@@ -196,7 +196,6 @@ async function init() {
 init();
 
 
-// ✅ Load required packages
 async function loadPackages(code) {
   let output = document.getElementById("output");
 
@@ -206,7 +205,7 @@ async function loadPackages(code) {
     await pyodide.loadPackage("pandas");
   }
 
-  // matplotlib (IMPORTANT FIX)
+  // matplotlib
   if (
     (code.includes("matplotlib") || code.includes("plt.") || code.includes(".plot(")) &&
     !pyodide.loadedPackages["matplotlib"]
@@ -214,8 +213,21 @@ async function loadPackages(code) {
     output.textContent = "Loading matplotlib...";
     await pyodide.loadPackage("matplotlib");
   }
-}
 
+  // ✅ seaborn (FIX)
+  if (code.includes("seaborn")) {
+    if (!pyodide.loadedPackages["micropip"]) {
+      output.textContent = "Loading micropip...";
+      await pyodide.loadPackage("micropip");
+    }
+
+    output.textContent = "Installing seaborn...";
+    await pyodide.runPythonAsync(`
+import micropip
+await micropip.install("seaborn")
+`);
+  }
+}
 
 // ✅ Run code
 async function runCode() {
