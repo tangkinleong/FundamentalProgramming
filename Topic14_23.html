@@ -36,13 +36,12 @@ button {
 <textarea id="code">
 import pandas as pd
 
-df1 = pd.read_csv('student_scores.csv', index_col='Name')
-df2 = pd.read_csv('student_scores2.csv', index_col='Name')
+df_score = pd.read_csv('student_scores3.csv', index_col='StudentID')
+df_group = pd.read_csv('student_group.csv', index_col='StudentID')
 
-frame = [df1, df2]
-res2 = pd.concat(frame, keys=['A', 'B'])
+res3 = df_score.join(df_group)
 
-res2.to_html()
+res3.to_html()
 </textarea>
 
 <br>
@@ -55,7 +54,7 @@ res2.to_html()
 let pyodide;
 
 // ✅ Hidden CSV 1
-let data1 = `Name,Age,Subject,Score,Grade
+let data_scores = 'Name,Age,Subject,Score,Grade
 Alice,15,Math,95,A
 Bob,16,Science,88,B
 Charlie,15,English,92,A
@@ -63,17 +62,18 @@ Diana,17,Math,78,C
 Ethan,16,Science,85,B
 Fiona,15,History,89,B
 George,17,Math,91,A
-Hannah,16,English,75,C`;
+Hannah,16,English,75,C';
 
-let data2 = `Name,Age,Subject,Score,Grade
-Abu,19,Malay,90,A
-John,17,English,89,B
-May,16,Add. Math,98,A
-Danny,17,Geography,71,C
-Eugene,16,Add. Math,88,B
-Ben,15,Geography,82,B
-Ahmad,17,Math,60,D
-Murni,19,Malay,75,C`;
+let data_group = 'StudentID,Study Group,Mentor
+ID001,1,Mr Bean
+ID002,2,Ms Kristine
+ID003,1,Mr Bean
+ID004,2,Ms Kristine
+ID005,1,Mr Bean
+ID006,2,Ms Kristine
+ID007,1,Mr Bean
+ID008,2,Ms Kristine';
+
 
 // ✅ Auto resize
 function autoResize(textarea) {
@@ -88,8 +88,8 @@ async function init() {
   pyodide = await loadPyodide();
 
   // ✅ Inject BOTH CSVs
-  pyodide.FS.writeFile("student_scores.csv", data1);
-  pyodide.FS.writeFile("student_scores2.csv", data2);
+  pyodide.FS.writeFile("student_scores3.csv", data_scores);
+  pyodide.FS.writeFile("student_group.csv", data_group);
 
   document.getElementById("output").textContent = "✅ Python Ready!";
 
