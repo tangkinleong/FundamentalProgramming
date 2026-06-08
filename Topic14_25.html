@@ -38,12 +38,12 @@ import pandas as pd
 df1 = pd.read_csv('student_scores3.csv', index_col='StudentID')
 ascending_df = df1.sort_values(by='Age')
 print("Sort in Ascending Order")
-print(ascending_df.to_html())
+ascending_df.to_html()
 
 print("\nSort in Decscending Order")
 descending_df = df1.sort_values(by='Age', ascending=False)
 print("\nSort in Descending Order")
-print(descending_df.to_html())
+descending_df.to_html()
 </textarea>
 
 <br>
