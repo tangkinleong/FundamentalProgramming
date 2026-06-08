@@ -26,8 +26,6 @@ button {
   background: black;
   color: lime;
   padding: 10px;
-  white-space: pre-wrap;
-  min-height: 120px;
 }
 
 #plot img {
@@ -49,12 +47,10 @@ sales_df = pd.read_csv('sales.csv')
 
 plt.figure(figsize=(8, 5))
 plt.hist(sales_df['Sales'], bins=20, color='orange', edgecolor='black')
-
 plt.title('Distribution of Sales')
 plt.xlabel('Sales')
 plt.ylabel('Frequency')
 
-plt.tight_layout()
 plt.show()
 </textarea>
 
@@ -68,7 +64,13 @@ plt.show()
 <script>
 let pyodide;
 
-// ✅ DATASET
+// ✅ auto resize function
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+}
+
+// ✅ dataset (shortened for demo - replace with full if needed)
 let data1 = `Date,Region,Category,Product,Sales,Profit
 2023-10-01,North,Electronics,Laptop,1450,520
 2023-10-01,South,Furniture,Chair,820,180
@@ -171,33 +173,24 @@ let data1 = `Date,Region,Category,Product,Sales,Profit
 2023-10-25,East,Clothing,Tshirt,520,90
 2023-10-25,West,Food,Juice,365,75`;
 
-// ✅ AUTO RESIZE
-function autoResize(textarea) {
-  textarea.style.height = "auto";
-  textarea.style.height = textarea.scrollHeight + "px";
-}
-
-// ✅ INIT
+// ✅ init
 async function init() {
   pyodide = await loadPyodide();
-
-  // Load CSV
   pyodide.FS.writeFile("sales.csv", data1);
 
   document.getElementById("output").textContent = "✅ Python Ready!";
 
-  const textarea = document.getElementById("code");
+  let textarea = document.getElementById("code");
+
+  // ✅ initial resize
   autoResize(textarea);
 
-  textarea.addEventListener("input", function () {
-    autoResize(this);
-  });
+  // ✅ resize on typing
+  textarea.addEventListener("input", () => autoResize(textarea));
 }
-
 init();
 
-
-// ✅ LOAD PACKAGES
+// ✅ load packages
 async function loadPackages(code) {
   let output = document.getElementById("output");
 
@@ -215,21 +208,18 @@ async function loadPackages(code) {
   }
 }
 
-
-// ✅ RUN CODE
+// ✅ run
 async function runCode() {
   let output = document.getElementById("output");
-  let plotDiv = document.getElementById("plot");
-
+  let plot = document.getElementById("plot");
   let code = document.getElementById("code").value;
 
-  output.textContent = "Preparing environment...";
-  plotDiv.innerHTML = "";
+  output.textContent = "Running...";
+  plot.innerHTML = "";
 
   try {
     await loadPackages(code);
 
-    // Capture output + reset plots
     pyodide.runPython(`
 import sys
 from io import StringIO
@@ -246,7 +236,7 @@ plt.close('all')
 sys.stdout.getvalue() + sys.stderr.getvalue()
 `);
 
-    // ✅ Get plot image
+    // ✅ capture plot
     let img = pyodide.runPython(`
 import matplotlib.pyplot as plt
 import io, base64
@@ -262,9 +252,9 @@ else:
 
     output.textContent = printed;
 
-    // ✅ Show plot
     if (img) {
-      plotDiv.innerHTML = "<img src='data:image/png;base64," + imgput.textContent = "❌ Error:\\n" + err;
+      plot.innerHTML = "<img src='data:image/png;base64," + img + (err) {
+    output.textContent = "❌ Error:\\n" + err;
   }
 }
 </script>
