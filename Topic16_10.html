@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+
+<style>
+body { font-family: Arial; margin: 20px; }
+
+textarea {
+  width: 100%;
+  min-height: 80px;
+  font-family: monospace;
+  overflow: hidden;
+  resize: none;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+button {
+  padding: 10px;
+  margin-top: 10px;
+}
+
+#output {
+  background: black;
+  color: lime;
+  padding: 10px;
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+</style>
+</head>
+
+<body>
+
+<h3>Python Code</h3>
+
+<textarea id="code">
+import pandas as pd
+import matplotlib.pyplot as plt
+sales_df = pd.read_csv('sales.csv')
+plt.figure(figsize=(8, 5))
+plt.scatter(sales_df['Sales'], sales_df['Profit'], alpha=0.6, color='purple')
+plt.title('Sales vs Profit')
+plt.xlabel('Sales')
+plt.ylabel('Profit')
+plt.tight_layout()
+</textarea>
+
+<br>
+<button onclick="runCode()">▶ Run Code</button>
+
+<h4>Output</h4>
+<div id="output">Loading Python...</div>
+
+<script>
+let pyodide;
+
+// ✅ Hidden CSV data
+let data1 = `Date,Region,Category,Product,Sales,Profit
+2023-10-01,North,Electronics,Laptop,1450,520
+2023-10-01,South,Furniture,Chair,820,180
+2023-10-01,East,Clothing,Shirt,560,120
+2023-10-01,West,Food,Bread,300,50
+2023-10-02,North,Electronics,Phone,1800,600
+2023-10-02,South,Furniture,Table,1340,250
+2023-10-02,East,Clothing,Jacket,980,220
+2023-10-02,West,Food,Milk,400,70
+2023-10-03,North,Electronics,Tablet,1100,300
+2023-10-03,South,Furniture,Sofa,1600,420
+2023-10-03,East,Clothing,Shoes,900,190
+2023-10-03,West,Food,Eggs,250,40
+2023-10-04,North,Electronics,Camera,1750,500
+2023-10-04,South,Furniture,Desk,1200,260
+2023-10-04,East,Clothing,Jeans,800,170
+2023-10-04,West,Food,Butter,380,60
+2023-10-05,North,Electronics,Speaker,920,210
+2023-10-05,South,Furniture,Bed,1900,470
+2023-10-05,East,Clothing,Tshirt,490,90
+2023-10-05,West,Food,Juice,340,55
+2023-10-06,North,Electronics,Laptop,1520,510
+2023-10-06,South,Furniture,Chair,900,200
+2023-10-06,East,Clothing,Shirt,640,140
+2023-10-06,West,Food,Bread,310,45
+2023-10-07,North,Electronics,Phone,1720,580
+2023-10-07,South,Furniture,Table,1180,230
+2023-10-07,East,Clothing,Jacket,990,250
+2023-10-07,West,Food,Milk,430,60
+2023-10-08,North,Electronics,Tablet,1030,280
+2023-10-08,South,Furniture,Sofa,1780,460
+2023-10-08,East,Clothing,Shoes,870,150
+2023-10-08,West,Food,Eggs,270,50
+2023-10-09,North,Electronics,Camera,1650,470
+2023-10-09,South,Furniture,Desk,1100,200
+2023-10-09,East,Clothing,Jeans,780,130
+2023-10-09,West,Food,Butter,390,70
+2023-10-10,North,Electronics,Speaker,950,220
+2023-10-10,South,Furniture,Bed,1850,480
+2023-10-10,East,Clothing,Tshirt,520,100
+2023-10-10,West,Food,Juice,360,65
+2023-10-11,North,Electronics,Laptop,1600,530
+2023-10-11,South,Furniture,Chair,860,180
+2023-10-11,East,Clothing,Shirt,690,160
+2023-10-11,West,Food,Bread,320,45
+2023-10-12,North,Electronics,Phone,1950,700
+2023-10-12,South,Furniture,Table,1400,300
+2023-10-12,East,Clothing,Jacket,1010,260
+2023-10-12,West,Food,Milk,450,75
+2023-10-13,North,Electronics,Tablet,1150,320
+2023-10-13,South,Furniture,Sofa,1700,430
+2023-10-13,East,Clothing,Shoes,920,210
+2023-10-13,West,Food,Eggs,240,30
+2023-10-14,North,Electronics,Camera,1780,520
+2023-10-14,South,Furniture,Desk,1220,280
+2023-10-14,East,Clothing,Jeans,840,180
+2023-10-14,West,Food,Butter,400,90
+2023-10-15,North,Electronics,Speaker,1020,260
+2023-10-15,South,Furniture,Bed,1920,600
+2023-10-15,East,Clothing,Tshirt,550,110
+2023-10-15,West,Food,Juice,370,80
+2023-10-16,North,Electronics,Laptop,1580,500
+2023-10-16,South,Furniture,Chair,870,190
+2023-10-16,East,Clothing,Shirt,620,150
+2023-10-16,West,Food,Bread,290,40
+2023-10-17,North,Electronics,Phone,1820,640
+2023-10-17,South,Furniture,Table,1300,260
+2023-10-17,East,Clothing,Jacket,950,200
+2023-10-17,West,Food,Milk,460,80
+2023-10-18,North,Electronics,Tablet,1080,300
+2023-10-18,South,Furniture,Sofa,1800,470
+2023-10-18,East,Clothing,Shoes,940,210
+2023-10-18,West,Food,Eggs,260,35
+2023-10-19,North,Electronics,Camera,1620,480
+2023-10-19,South,Furniture,Desk,1170,240
+2023-10-19,East,Clothing,Jeans,770,120
+2023-10-19,West,Food,Butter,405,60
+2023-10-20,North,Electronics,Speaker,970,240
+2023-10-20,South,Furniture,Bed,1890,530
+2023-10-20,East,Clothing,Tshirt,530,100
+2023-10-20,West,Food,Juice,350,70
+2023-10-21,North,Electronics,Laptop,1500,520
+2023-10-21,South,Furniture,Chair,910,200
+2023-10-21,East,Clothing,Shirt,710,150
+2023-10-21,West,Food,Bread,330,50
+2023-10-22,North,Electronics,Phone,1750,600
+2023-10-22,South,Furniture,Table,1250,270
+2023-10-22,East,Clothing,Jacket,880,190
+2023-10-22,West,Food,Milk,440,75
+2023-10-23,North,Electronics,Tablet,1120,290
+2023-10-23,South,Furniture,Sofa,1650,420
+2023-10-23,East,Clothing,Shoes,890,170
+2023-10-23,West,Food,Eggs,255,45
+2023-10-24,North,Electronics,Camera,1700,500
+2023-10-24,South,Furniture,Desk,1190,250
+2023-10-24,East,Clothing,Jeans,760,130
+2023-10-24,West,Food,Butter,410,65
+2023-10-25,North,Electronics,Speaker,980,250
+2023-10-25,South,Furniture,Bed,1950,650
+2023-10-25,East,Clothing,Tshirt,520,90
+2023-10-25,West,Food,Juice,365,75`;
+
+
+// ✅ Auto-resize
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  requestAnimationFrame(() => {
+    textarea.style.height = textarea.scrollHeight + "px";
+  });
+}
+
+// ✅ Initialize Pyodide
+async function init() {
+  pyodide = await loadPyodide();
+
+  // Load CSV into virtual filesystem
+  pyodide.FS.writeFile("sales.csv", data1);
+
+  document.getElementById("output").textContent = "✅ Python Ready!";
+
+  const textarea = document.getElementById("code");
+
+  autoResize(textarea);
+  setTimeout(() => autoResize(textarea), 50);
+
+  textarea.addEventListener("input", function () {
+    autoResize(this);
+  });
+}
+
+init();
+
+
+// ✅ Load required packages
+async function loadPackages(code) {
+  let output = document.getElementById("output");
+
+  // pandas
+  if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
+    output.textContent = "Loading pandas...";
+    await pyodide.loadPackage("pandas");
+  }
+
+  // matplotlib (IMPORTANT FIX)
+  if (
+    (code.includes("matplotlib") || code.includes("plt.") || code.includes(".plot(")) &&
+    !pyodide.loadedPackages["matplotlib"]
+  ) {
+    output.textContent = "Loading matplotlib...";
+    await pyodide.loadPackage("matplotlib");
+  }
+}
+
+
+// ✅ Run code
+async function runCode() {
+  let output = document.getElementById("output");
+  let code = document.getElementById("code").value;
+
+  output.textContent = "Preparing environment...";
+
+  try {
+    await loadPackages(code);
+
+    // Capture print()
+    pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+sys.stderr = StringIO()
+`);
+
+    await pyodide.runPythonAsync(code);
+
+    let printed = pyodide.runPython(`
+sys.stdout.getvalue() + sys.stderr.getvalue()
+`);
+
+    output.textContent = printed;
+
+  } catch (err) {
+    output.textContent = "❌ Error:\\n" + err;
+  }
+}
+</script>
+
+</body>
+</html>
