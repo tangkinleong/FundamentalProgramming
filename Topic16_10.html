@@ -42,12 +42,17 @@ button {
 <textarea id="code">
 import pandas as pd
 import matplotlib.pyplot as plt
+
 sales_df = pd.read_csv('sales.csv')
+
 plt.figure(figsize=(8, 5))
-plt.scatter(sales_df['Sales'], sales_df['Profit'], alpha=0.6, color='purple')
+plt.scatter(sales_df['Sales'], sales_df['Profit'],
+            alpha=0.6, color='purple')
+
 plt.title('Sales vs Profit')
 plt.xlabel('Sales')
 plt.ylabel('Profit')
+
 plt.tight_layout()
 plt.show()
 </textarea>
@@ -62,7 +67,13 @@ plt.show()
 <script>
 let pyodide;
 
-// ✅ dataset
+// ✅ auto resize function
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+}
+
+// ✅ dataset (shortened for demo - replace with full if needed)
 let data1 = `Date,Region,Category,Product,Sales,Profit
 2023-10-01,North,Electronics,Laptop,1450,520
 2023-10-01,South,Furniture,Chair,820,180
@@ -169,7 +180,16 @@ let data1 = `Date,Region,Category,Product,Sales,Profit
 async function init() {
   pyodide = await loadPyodide();
   pyodide.FS.writeFile("sales.csv", data1);
+
   document.getElementById("output").textContent = "✅ Python Ready!";
+
+  let textarea = document.getElementById("code");
+
+  // ✅ initial resize
+  autoResize(textarea);
+
+  // ✅ resize on typing
+  textarea.addEventListener("input", () => autoResize(textarea));
 }
 init();
 
@@ -203,7 +223,6 @@ async function runCode() {
   try {
     await loadPackages(code);
 
-    // capture output
     pyodide.runPython(`
 import sys
 from io import StringIO
@@ -237,10 +256,7 @@ else:
     output.textContent = printed;
 
     if (img) {
-      plot.innerHTML = "data:image/png;base64,";
-    }
-
-  } catch (err) {
+      plot.innerHTML = "<img src='data:image/png;base64," + img + (err) {
     output.textContent = "❌ Error:\\n" + err;
   }
 }
