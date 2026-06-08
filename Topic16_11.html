@@ -26,18 +26,13 @@ button {
   background: black;
   color: lime;
   padding: 10px;
-}
-
-#plot img {
-  max-width: 100%;
-  margin-top: 10px;
+  white-space: pre-wrap;
+  min-height: 120px;
 }
 </style>
 </head>
 
 <body>
-
-<h3>Python Code</h3>
 
 <textarea id="code">
 import pandas as pd
@@ -59,18 +54,11 @@ plt.show()
 
 <h4>Output</h4>
 <div id="output">Loading Python...</div>
-<div id="plot"></div>
 
 <script>
 let pyodide;
 
-// ✅ auto resize function
-function autoResize(textarea) {
-  textarea.style.height = "auto";
-  textarea.style.height = textarea.scrollHeight + "px";
-}
-
-// ✅ dataset (shortened for demo - replace with full if needed)
+// ✅ Hidden CSV data
 let data1 = `Date,Region,Category,Product,Sales,Profit
 2023-10-01,North,Electronics,Laptop,1450,520
 2023-10-01,South,Furniture,Chair,820,180
@@ -173,32 +161,48 @@ let data1 = `Date,Region,Category,Product,Sales,Profit
 2023-10-25,East,Clothing,Tshirt,520,90
 2023-10-25,West,Food,Juice,365,75`;
 
-// ✅ init
+
+// ✅ Auto-resize
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  requestAnimationFrame(() => {
+    textarea.style.height = textarea.scrollHeight + "px";
+  });
+}
+
+// ✅ Initialize Pyodide
 async function init() {
   pyodide = await loadPyodide();
+
+  // Load CSV into virtual filesystem
   pyodide.FS.writeFile("sales.csv", data1);
 
   document.getElementById("output").textContent = "✅ Python Ready!";
 
-  let textarea = document.getElementById("code");
+  const textarea = document.getElementById("code");
 
-  // ✅ initial resize
   autoResize(textarea);
+  setTimeout(() => autoResize(textarea), 50);
 
-  // ✅ resize on typing
-  textarea.addEventListener("input", () => autoResize(textarea));
+  textarea.addEventListener("input", function () {
+    autoResize(this);
+  });
 }
+
 init();
 
-// ✅ load packages
+
+// ✅ Load required packages
 async function loadPackages(code) {
   let output = document.getElementById("output");
 
+  // pandas
   if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
     output.textContent = "Loading pandas...";
     await pyodide.loadPackage("pandas");
   }
 
+  // matplotlib (IMPORTANT FIX)
   if (
     (code.includes("matplotlib") || code.includes("plt.") || code.includes(".plot(")) &&
     !pyodide.loadedPackages["matplotlib"]
@@ -208,26 +212,23 @@ async function loadPackages(code) {
   }
 }
 
-// ✅ run
+
+// ✅ Run code
 async function runCode() {
   let output = document.getElementById("output");
-  let plot = document.getElementById("plot");
   let code = document.getElementById("code").value;
 
-  output.textContent = "Running...";
-  plot.innerHTML = "";
+  output.textContent = "Preparing environment...";
 
   try {
     await loadPackages(code);
 
+    // Capture print()
     pyodide.runPython(`
 import sys
 from io import StringIO
-import matplotlib.pyplot as plt
-
 sys.stdout = StringIO()
 sys.stderr = StringIO()
-plt.close('all')
 `);
 
     await pyodide.runPythonAsync(code);
@@ -236,24 +237,9 @@ plt.close('all')
 sys.stdout.getvalue() + sys.stderr.getvalue()
 `);
 
-    // ✅ capture plot
-    let img = pyodide.runPython(`
-import matplotlib.pyplot as plt
-import io, base64
-
-if plt.get_fignums():
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    base64.b64encode(buf.read()).decode()
-else:
-    ""
-`);
-
     output.textContent = printed;
 
-    if (img) {
-      plot.innerHTML = "<img src='data:image/png;base64," + img + (err) {
+  } catch (err) {
     output.textContent = "❌ Error:\\n" + err;
   }
 }
