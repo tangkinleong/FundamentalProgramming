@@ -39,7 +39,7 @@ import pandas as pd
 df_score = pd.read_csv('student_scores3.csv', index_col='StudentID')
 df_group2 = pd.read_csv('student_group2.csv', index_col='StudentID')
 res4 = df_score.join(df_group2, how='outer')
-res4.to_html()
+print(res4.to_html())
 </textarea>
 
 <br>
