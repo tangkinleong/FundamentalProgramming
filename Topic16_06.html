@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
 
 <style>
@@ -33,14 +34,15 @@ button {
 
 <body>
 
+<h3>Python Code</h3>
+
 <textarea id="code">
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
 sales_df = pd.read_csv('sales.csv')
-sales_df.head()
 
+print(sales_df.head())
 </textarea>
 
 <br>
@@ -52,7 +54,7 @@ sales_df.head()
 <script>
 let pyodide;
 
-// ✅ Hidden CSV 1
+// ✅ Hidden CSV data
 let data1 = `Date,Region,Category,Product,Sales,Profit
 2023-10-17,South,Furniture,Chair,1226,206
 2023-10-18,East,Furniture,Desk,1559,30
@@ -63,7 +65,7 @@ let data1 = `Date,Region,Category,Product,Sales,Profit
 2023-10-23,South,Furniture,Chair,1226,320`;
 
 
-// ✅ Auto resize
+// ✅ Auto-resize
 function autoResize(textarea) {
   textarea.style.height = "auto";
   requestAnimationFrame(() => {
@@ -71,13 +73,12 @@ function autoResize(textarea) {
   });
 }
 
-// ✅ Init
+// ✅ Initialize Pyodide
 async function init() {
   pyodide = await loadPyodide();
 
-  // ✅ Inject BOTH CSVs
+  // Load CSV into virtual filesystem
   pyodide.FS.writeFile("sales.csv", data1);
-
 
   document.getElementById("output").textContent = "✅ Python Ready!";
 
@@ -90,24 +91,37 @@ async function init() {
     autoResize(this);
   });
 }
+
 init();
 
-// ✅ Load packages
+
+// ✅ Load required packages
 async function loadPackages(code) {
   let output = document.getElementById("output");
 
+  // pandas
   if (code.includes("pandas") && !pyodide.loadedPackages["pandas"]) {
     output.textContent = "Loading pandas...";
     await pyodide.loadPackage("pandas");
   }
+
+  // matplotlib (IMPORTANT FIX)
+  if (
+    (code.includes("matplotlib") || code.includes("plt.") || code.includes(".plot(")) &&
+    !pyodide.loadedPackages["matplotlib"]
+  ) {
+    output.textContent = "Loading matplotlib...";
+    await pyodide.loadPackage("matplotlib");
+  }
 }
+
 
 // ✅ Run code
 async function runCode() {
   let output = document.getElementById("output");
   let code = document.getElementById("code").value;
 
-  output.innerHTML = "Preparing environment...";
+  output.textContent = "Preparing environment...";
 
   try {
     await loadPackages(code);
@@ -117,17 +131,16 @@ async function runCode() {
 import sys
 from io import StringIO
 sys.stdout = StringIO()
+sys.stderr = StringIO()
 `);
 
-    let result = await pyodide.runPythonAsync(code);
-    let printed = pyodide.runPython("sys.stdout.getvalue()");
+    await pyodide.runPythonAsync(code);
 
-    // ✅ Correct HTML detection
-    if (result && result.toString().trim().startsWith("<")) {
-      output.innerHTML = "<pre>" + printed + "</pre>" + result;
-    } else {
-      output.textContent = printed;
-    }
+    let printed = pyodide.runPython(`
+sys.stdout.getvalue() + sys.stderr.getvalue()
+`);
+
+    output.textContent = printed;
 
   } catch (err) {
     output.textContent = "❌ Error:\\n" + err;
