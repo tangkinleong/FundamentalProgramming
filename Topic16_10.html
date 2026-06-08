@@ -42,16 +42,12 @@ button {
 <textarea id="code">
 import pandas as pd
 import matplotlib.pyplot as plt
-
 sales_df = pd.read_csv('sales.csv')
-
 plt.figure(figsize=(8, 5))
 plt.scatter(sales_df['Sales'], sales_df['Profit'], alpha=0.6, color='purple')
-
 plt.title('Sales vs Profit')
 plt.xlabel('Sales')
 plt.ylabel('Profit')
-
 plt.tight_layout()
 plt.show()
 </textarea>
