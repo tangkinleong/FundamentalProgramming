@@ -32,12 +32,16 @@ button {
 
 <body>
 <textarea id="code">
-global_message = "I am a global variable."
+x = 100 # Global variable
 
-def show_global_message():
-    print(global_message) # Can access the global variable
+def set_x_locally():
+  x = 50 # A new local variable 'x' is created
+  print(f"Inside the function, x is {x}.)
 
-show_global_message()
+set_x_locally()
+
+print(f"Outside the function, x is still {x}.")
+  
 </textarea>
 <br>
 <button onclick="runCode()">▶ Run Code</button>
